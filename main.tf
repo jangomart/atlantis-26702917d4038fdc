@@ -43,3 +43,9 @@ resource "google_container_node_pool" "primary_preemptible_nodes" {
     ]
   }
 }
+
+resource "helm_release" "example" {
+  name       = "nginx-example"
+  repository = "https://kubernetes-charts.storage.googleapis.com" 
+  chart      = "nginx-ingress"
+}

@@ -5,7 +5,7 @@ provider "google" {
 resource "google_container_cluster" "primary" {
   name     = "${var.project}-cluster"
   location = var.region
-  project = "jangomart"
+  project = var.project
 
   # We can't create a cluster with no node pool defined, but we want to only use
   # separately managed node pools. So we create the smallest possible default

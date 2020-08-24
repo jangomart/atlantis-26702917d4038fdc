@@ -1,41 +1,44 @@
-resource "google_compute_firewall" "default" {
-  name    = "demo-firewall"
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-
-  target_tags = ["web"]
+provider "google" {
+  project = "jangomart"
 }
 
-resource "google_compute_instance" "default" {
-  name         = "demo"
-  machine_type = "n1-highcpu-2"
-  zone         = "us-east4-b"
+resource "google_container_cluster" "primary" {
+  name     = "jangomart-cluster"
+  location = "us-east1"
 
-  can_ip_forward            = "true"
-  allow_stopping_for_update = "true"
+  # We can't create a cluster with no node pool defined, but we want to only use
+  # separately managed node pools. So we create the smallest possible default
+  # node pool and immediately delete it.
+  remove_default_node_pool = true
+  initial_node_count       = 1
 
-  tags = ["web"]
+  master_auth {
+    username = "test_cluster_username_123"
+    password = "test_cluster_password_123"
 
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-9"
+    client_certificate_config {
+      issue_client_certificate = false
     }
   }
-
-  network_interface {
-    network       = "default"
-    access_config = {}
-  }
-
-  metadata_startup_script = "sudo apt-get update && sudo apt-get install -yqq nginx"
 }
 
-output "address" {
-  value = "${google_compute_instance.default.network_interface.0.access_config.0.assigned_nat_ip}"
+resource "google_container_node_pool" "primary_preemptible_nodes" {
+  name       = "my-node-pool"
+  location   = "us-east1"
+  cluster    = google_container_cluster.primary.name
+  node_count = 1
+
+  node_config {
+    preemptible  = true
+    machine_type = "e2-micro"
+
+    metadata = {
+      disable-legacy-endpoints = "true"
+    }
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+    ]
+  }
 }

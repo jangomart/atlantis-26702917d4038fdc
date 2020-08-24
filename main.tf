@@ -3,7 +3,7 @@ provider "google" {
 }
 
 resource "google_container_cluster" "primary" {
-  name     = "${var.project}-cluster"
+  name     = "${var.project}-cluster-jangomart"
   location = var.region
   project = var.project
 
@@ -42,10 +42,4 @@ resource "google_container_node_pool" "primary_preemptible_nodes" {
       "https://www.googleapis.com/auth/monitoring",
     ]
   }
-}
-
-resource "helm_release" "example" {
-  name       = "nginx-example"
-  repository = "https://kubernetes-charts.storage.googleapis.com" 
-  chart      = "nginx-ingress"
 }
